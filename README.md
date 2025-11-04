@@ -1,8 +1,6 @@
 # SystemVerilog Complete Learning Repository
 
-**Comprehensive Guide with File References, Detailed Theory, and Real-World Use Cases**
-
-**Every concept explained with actual code examples from this repository**
+**A Comprehensive Collection of SystemVerilog Concepts with Detailed Line-by-Line Explanations**
 
 ---
 
@@ -19,1713 +17,1415 @@
 9. [Concurrency and Threading](#8-concurrency-and-threading)
 10. [Synchronization Primitives](#9-synchronization-primitives)
 11. [Advanced Control Flow](#10-advanced-control-flow)
-12. [Repository Structure](#repository-structure)
-13. [Getting Started](#getting-started)
+12. [Interview Questions](#11-interview-questions)
+13. [Repository Structure](#12-repository-structure)
+14. [Getting Started](#13-getting-started)
+15. [Best Practices](#14-best-practices)
 
 ---
 
 ## Introduction
 
+This repository serves as a comprehensive learning resource for SystemVerilog, covering everything from fundamental concepts to advanced verification techniques. Each file contains detailed inline comments explaining every line of code, making it an ideal resource for both beginners and experienced engineers.
+
+### Why This Repository?
+
+- ✅ **Complete Coverage**: Every major SystemVerilog concept is demonstrated with working examples
+- ✅ **Detailed Documentation**: Every line of code is explained with clear comments
+- ✅ **Real-World Examples**: Practical examples including interview questions
+- ✅ **Professional Structure**: Well-organized codebase following industry best practices
+- ✅ **Learning Path**: From basics to advanced topics in logical progression
+
 ### What is SystemVerilog?
 
-SystemVerilog (IEEE 1800) is a hardware description and verification language that extends Verilog with powerful verification capabilities. It is the industry standard for modern chip verification, used by all major semiconductor companies.
-
-**Key Statistics:**
-- **60-70%** of chip development time is spent on verification
-- **100%** of ASIC verification projects use SystemVerilog
-- **IEEE 1800** standard ensures portability across tools
-- **UVM** (Universal Verification Methodology) is built entirely on SystemVerilog
+SystemVerilog is a hardware description and verification language that extends Verilog with features for:
+- **Verification**: Constrained randomization, coverage, assertions
+- **Object-Oriented Programming**: Classes, inheritance, polymorphism
+- **Advanced Data Types**: Dynamic arrays, associative arrays, queues
+- **Concurrency**: Fork-join blocks, threads, synchronization
+- **Assertions**: Formal verification and property checking
 
 ---
 
 ## 1. Fundamental Concepts
 
 ### 1.1 Program Blocks
-**📁 File Reference**: `program_block.sv`
-
-#### Detailed Theory
+**File**: `program_block.sv`
 
 **What are Program Blocks?**
-Program blocks create a **reactive region** in simulation. They execute after all design code in the **active region** completes, ensuring deterministic testbench behavior.
+Program blocks provide a clear separation between testbench code and design code. They execute in the reactive region, ensuring proper simulation semantics and avoiding race conditions between testbench and design.
 
-**Simulation Region Model:**
-```
-Verilog Simulation Regions:
-├── Active Region (Design Code)
-│   └── All module code executes here
-├── Inactive Region
-│   └── #0 delays scheduled here
-├── Reactive Region (Program Blocks) ← Program blocks execute here
-│   └── Testbench code sees stable design values
-└── Postponed Region
-    └── $strobe and $monitor execute here
-```
-
-**Why Program Blocks Exist:**
-1. **Race Condition Prevention**: Without program blocks, testbench and design can execute simultaneously, causing race conditions
-2. **Deterministic Behavior**: Ensures testbench sees stable design values
-3. **Clock Synchronization**: Program blocks work with clocking blocks for synchronized access
-4. **Industry Standard**: Required by UVM and all modern verification methodologies
-
-**Memory Model:**
-```
-Program Block Execution:
-Time 0: Design code executes (Active Region)
-Time 1: Program block code executes (Reactive Region)
-        → Testbench reads stable design values
-```
-
-#### Code Example from `program_block.sv`
-
-```systemverilog
-program rajesh;                              // Declare program block named 'rajesh'
-  int a;                                     // Integer variable (32-bit signed)
-  int b;                                     // Integer variable (32-bit signed)
-  initial                                   // Initial block: executes once at simulation start
-    begin                                   // Begin sequential block
-      a=90;                                 // Assign value 90 to variable 'a'
-      b=30;                                 // Assign value 30 to variable 'b'
-      #2 $display($time,"a=%0d,b=%0d",a,b); // Wait 2 time units, then display values
-                                            // $time: current simulation time
-                                            // %0d: decimal format (no leading zeros)
-    end                                     // End sequential block
-endprogram                                  // End program block
-```
-
-**Explanation:**
-- `program rajesh`: Creates a program block (reactive region)
-- `int a, b`: Declares variables that exist in program scope
-- `initial begin...end`: Executes once at simulation start
-- `#2`: Delay of 2 time units (program blocks can use delays)
-- `$display($time, ...)`: Prints formatted output with time
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **UVM Testbenches** (100% usage)
-   - All UVM testbenches use program blocks
-   - Ensures testbench code runs after design stabilizes
-   - Used by Intel, AMD, NVIDIA, Qualcomm
-
-2. **CPU Verification**
-   - Intel Core processor verification
-   - Multi-core processor testbenches
-   - Prevents race conditions between testbench and CPU
-
-3. **GPU Verification**
-   - NVIDIA GPU verification environments
-   - Parallel execution verification
-   - Ensures testbench doesn't interfere with GPU operations
-
-4. **SoC Verification**
-   - System-on-Chip verification
-   - Multiple IP integration verification
-   - Standard practice in all SoC projects
+**Key Features:**
+- Execute in reactive region (after design code)
+- Help avoid race conditions
+- Better simulation control
+- Clear separation of concerns
 
 **When to Use:**
-- ✅ **Always in Testbenches**: Industry standard for testbench code
-- ✅ **UVM Environments**: Required by UVM methodology
-- ✅ **Multi-Threaded Designs**: Prevents race conditions
-- ✅ **Protocol Verification**: Ensures proper timing
+- Testbench development
+- When you need to ensure testbench code runs after design code
+- To avoid timing issues in simulation
 
-**Real-World Scenario:**
+**Example Usage:**
 ```systemverilog
-// CPU verification example
-program cpu_testbench;
-  // Testbench code here
-  // Runs after CPU design code completes
-  // Can safely read CPU registers without race conditions
+program testbench;
+  initial begin
+    // Testbench code here
+  end
 endprogram
-
-module cpu_design;
-  // CPU design code here
-  // Executes in active region
-endmodule
 ```
 
 ---
 
 ### 1.2 Packages
-**📁 File Reference**: `packages.sv`
-
-#### Detailed Theory
+**File**: `packages.sv`
 
 **What are Packages?**
-Packages provide a **namespace mechanism** for grouping related declarations. They solve the global namespace pollution problem in Verilog.
+Packages group related declarations (classes, functions, types, constants) together, providing a namespace mechanism. They enable code reusability and can be imported into modules, classes, or other packages.
 
-**Package Theory:**
-```
-Package Structure:
-┌─────────────────────┐
-│ package pkg;       │
-│ ├── Classes        │
-│ ├── Functions      │
-│ ├── Tasks          │
-│ ├── Types          │
-│ └── Constants      │
-└─────────────────────┘
-      ↓ import
-┌─────────────────────┐
-│ module/class        │
-│ Uses pkg items     │
-└─────────────────────┘
-```
+**Key Features:**
+- Namespace management
+- Code reusability across multiple files
+- Shared declarations
+- Import mechanism: `import pkg::*` or `import pkg::item`
 
-**Import Mechanisms:**
-1. **Wildcard Import**: `import pkg::*;` - Imports all items
-2. **Selective Import**: `import pkg::item;` - Imports specific item
-3. **Explicit Reference**: `pkg::item` - Direct access without import
+**Benefits:**
+- Avoids naming conflicts
+- Organizes related code
+- Easy to share across projects
+- Cleaner code structure
 
-**Why Packages Matter:**
-- **Namespace Management**: Prevents name conflicts
-- **Code Reusability**: Share code across projects
-- **Library Organization**: Organize verification libraries
-- **Team Collaboration**: Multiple engineers can work independently
-
-#### Code Example from `packages.sv`
-
+**Example Usage:**
 ```systemverilog
-package pkg;                                // Declare package named 'pkg'
-class packet;                               // Define class 'packet' inside package
-  int addr;                                 // Member variable: address (32-bit integer)
-  int data;                                 // Member variable: data (32-bit integer)
-  function display();                       // Function: returns value
-    $display("i am rajesh");                // Print message
-    endfunction                             // End function
-  task run();                               // Task: can have delays
-    $display("i am runing");                // Print message
-    endtask                                 // End task
-endclass                                    // End class
-endpackage                                  // End package
-
-import pkg::*;                              // Import all items from package 'pkg'
-                                            // Wildcard '*' imports everything
-module sv;                                  // Declare module
-  packet p;                                 // Declare handle 'p' of type 'packet'
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      p=new();                              // Create new packet object
-                                            // new(): constructor allocates memory
-      p.addr=90;                            // Access member: assign 90 to addr
-      p.data=30;                            // Access member: assign 30 to data
-      p.display();                          // Call function: execute display()
-      p.run();                              // Call task: execute run()
-      $display("addr=%0d,data=%0d",p.addr,p.data); // Print addr and data
-    end                                     // End sequential block
-endmodule                                  // End module
-```
-
-**Explanation:**
-- `package pkg`: Creates a namespace for related declarations
-- `class packet`: Class defined inside package (namespace: `pkg::packet`)
-- `import pkg::*`: Wildcard import makes all package items available
-- `packet p`: Can use class directly after import
-- `p=new()`: Creates object instance
-- `p.addr`, `p.data`: Access member variables
-- `p.display()`, `p.run()`: Call class methods
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **UVM Framework** (100% usage)
-   ```systemverilog
-   package uvm_pkg;
-     class uvm_component;
-       // Base component class
-     endclass
-   endpackage
-   
-   import uvm_pkg::*;
-   class my_test extends uvm_test;
-     // UVM test class
-   endclass
-   ```
-   - Entire UVM framework is a package
-   - Used by all major semiconductor companies
-
-2. **Verification IP (VIP) Packages**
-   ```systemverilog
-   package pcie_vip_pkg;
-     class pcie_transaction;
-       // PCIe transaction class
-     endclass
-   endpackage
-   ```
-   - Synopsys, Cadence distribute VIP as packages
-   - Companies import VIP packages into testbenches
-
-3. **Corporate Verification Libraries**
-   ```systemverilog
-   package company_verification_lib;
-     class company_packet;
-       // Standard packet class
-     endclass
-   endpackage
-   ```
-   - Intel, AMD, NVIDIA maintain company-wide packages
-   - Used across all company projects
-
-**When to Use:**
-- ✅ **Code Reuse**: Sharing code across multiple files
-- ✅ **Large Projects**: Organizing large codebases
-- ✅ **Team Development**: Multiple engineers working together
-- ✅ **Library Development**: Creating reusable libraries
-- ✅ **Avoiding Conflicts**: Preventing name collisions
-
-**Real-World Scenario:**
-```systemverilog
-// Corporate verification library
-package company_verification_pkg;
-  class StandardTransaction;
-    int addr;
-    int data;
+package my_pkg;
+  class packet;
+    // Class definition
   endclass
-  
-  function void log_message(string msg);
-    $display("[%0t] %s", $time, msg);
-  endfunction
 endpackage
 
-// Multiple projects use same package
-import company_verification_pkg::*;
+import my_pkg::*;
+module test;
+  packet p = new();
+endmodule
 ```
 
 ---
 
 ### 1.3 Scope Resolution Operator (::)
-**📁 File Reference**: `scope_resolution_operator.sv`
-
-#### Detailed Theory
+**File**: `scope_resolution_operator.sv`
 
 **What is Scope Resolution?**
-The `::` operator accesses **static members** and methods of a class without requiring an object instance. Static members belong to the class itself, not to any particular instance.
+The `::` operator accesses static members and methods of a class without requiring an object instance. Static members belong to the class itself, not to any particular instance.
 
-**Static vs Instance Members:**
-```
-Class Members:
-├── Instance Members (belong to object)
-│   ├── Each object has its own copy
-│   └── Accessed via: object.member
-└── Static Members (belong to class)
-    ├── Shared across all objects
-    └── Accessed via: class::member
-```
-
-**Memory Model:**
-```
-Instance Members:
-Object 1: [addr=100, data=200]
-Object 2: [addr=300, data=400]
-Each object has separate memory
-
-Static Members:
-Class Memory: [count=5] ← Shared by all objects
-Object 1 ──┐
-Object 2 ──┼──→ All point to same count
-Object 3 ──┘
-```
-
-#### Code Example from `scope_resolution_operator.sv`
-
-(Reading the file to get the exact example)
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **UVM Factory Pattern**
-   ```systemverilog
-   uvm_component comp = uvm_factory::create("my_component");
-   ```
-   - `uvm_factory::create()` is a static method
-   - Used in all UVM testbenches
-
-2. **Configuration Management**
-   ```systemverilog
-   class VerificationConfig;
-     static int debug_level = 0;
-     static function void set_debug(int level);
-       debug_level = level;
-     endfunction
-   endclass
-   
-   VerificationConfig::set_debug(2);  // Access without object
-   ```
-   - Global configuration shared across testbenches
-
-3. **Statistics Tracking**
-   ```systemverilog
-   class Transaction;
-     static int total_count = 0;
-     static function void print_stats();
-       $display("Total: %0d", total_count);
-     endfunction
-   endclass
-   
-   Transaction::print_stats();  // Access without object
-   ```
-   - Global statistics across all transactions
+**Key Concepts:**
+- Static members are shared across all instances
+- Accessed using `class_name::member`
+- No object instantiation needed
+- Useful for constants and utility functions
 
 **When to Use:**
-- ✅ **Class-Level Data**: Data belongs to class, not instance
-- ✅ **Utility Functions**: Functions not needing instance
-- ✅ **Configuration**: Shared configuration
-- ✅ **Factory Methods**: Creating objects without instance
-- ✅ **Statistics**: Global statistics
+- When you need class-level data (not instance-specific)
+- For utility functions that don't need instance data
+- For constants shared across all instances
+
+**Example Usage:**
+```systemverilog
+class Counter;
+  static int count = 0;
+  static function void increment();
+    count++;
+  endfunction
+endclass
+
+Counter::increment();  // Access without object
+```
 
 ---
 
 ### 1.4 Extern Keyword
-**📁 File Reference**: `extern_keyword.sv`
-
-#### Detailed Theory
+**File**: `extern_keyword.sv`
 
 **What is Extern?**
-The `extern` keyword separates **declaration** (interface) from **definition** (implementation). This enables:
-1. **Clean Interfaces**: Class shows only interface
-2. **Separate Files**: Implementation in separate files
-3. **Better Organization**: Easier to read class definitions
-4. **Library Distribution**: Distribute headers separately
+The `extern` keyword allows function/task definitions outside the class body. This keeps class declarations clean and separates interface from implementation.
 
-**Extern Theory:**
+**Key Features:**
+- Declaration inside class, definition outside
+- Cleaner class interfaces
+- Better code organization
+- Uses scope resolution: `function class_name::method_name()`
+
+**Benefits:**
+- Smaller class definitions
+- Implementation can be in separate files
+- Easier to read class interfaces
+- Better for large classes
+
+**Example Usage:**
+```systemverilog
+class Packet;
+  extern function void display();
+endclass
+
+function Packet::display();
+  $display("Packet data");
+endfunction
 ```
-Class Definition (Header):
-├── Member Variables
-├── Function Declarations (extern)
-└── Implementation? NO!
-
-Implementation File:
-└── Function Definitions (class::function)
-```
-
-#### Code Example from `extern_keyword.sv`
-
-(Reading the file to get the exact example)
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Large Verification IP Classes**
-   - VIP vendors use extern to keep headers clean
-   - Implementations can be hundreds of lines
-
-2. **Protocol Driver Classes**
-   - Separate interface (architect) from implementation (engineer)
-   - Enables parallel development
-
-**When to Use:**
-- ✅ **Large Methods**: Complex method implementations
-- ✅ **File Organization**: Separating interface/implementation
-- ✅ **Code Readability**: Keeping classes readable
-- ✅ **Library Development**: Distributing headers
-- ✅ **Team Development**: Parallel development
 
 ---
 
 ### 1.5 For Loops
-**📁 File Reference**: `for_loop.sv`
-
-#### Detailed Theory
+**File**: `for_loop.sv`
 
 **What are Enhanced For Loops?**
-SystemVerilog extends Verilog's for loop with:
-1. **Multiple Variables**: Multiple loop variables
-2. **Enhanced Initialization**: Multiple initialization statements
-3. **Enhanced Increment**: Multiple increment/decrement operations
-4. **Scope Control**: Better variable scope control
+SystemVerilog supports enhanced for loops with multiple initialization and increment statements, providing more flexibility than traditional loops.
 
-**For Loop Theory:**
-```
-Standard For Loop:
-for (init; condition; increment)
-    statement
+**Key Features:**
+- Multiple loop variables
+- Multiple initialization statements
+- Multiple increment/decrement operations
+- Enhanced control flow
 
-Enhanced For Loop:
-for (init1, init2; condition; inc1, inc2)
-    statement
-```
-
-#### Code Example from `for_loop.sv`
-
-(Reading the file to get the exact example)
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Protocol Sequence Generation**
-   - Network protocol verification (Ethernet, PCIe)
-   - Multiple counters needed (sequence number, timestamp, retry)
-
-2. **Memory Testing**
-   - Address and data counters
-   - Used in all memory verification
-
-3. **Multi-Dimensional Array Processing**
-   - Image processing in GPU/camera ISP verification
-   - Row, column, pixel index counters
+**Types:**
+- Standard for loop: `for(int i=0; i<10; i++)`
+- Multiple variables: `for(i=0,j=10; i<10; i++,j--)`
 
 **When to Use:**
-- ✅ **Multiple Related Counters**: Related loop variables
-- ✅ **Protocol Sequences**: Protocol sequence generation
-- ✅ **Memory Testing**: Address/data generation
-- ✅ **Multi-Dimensional Processing**: Matrix/image processing
+- Iterating through arrays
+- Complex loop conditions
+- Multiple related counters
+
+**Example Usage:**
+```systemverilog
+for(int i=0, j=10; i<10; i++, j--) begin
+  $display("i=%0d, j=%0d", i, j);
+end
+```
 
 ---
 
 ### 1.6 Data Type Conversions
-**📁 File Reference**: `data_type_conversions.sv`
-
-#### Detailed Theory
+**File**: `data_type_conversions.sv`
 
 **What are Type Conversions?**
-Type casting converts values between different data types using explicit syntax: `type'(expression)`.
+Type casting converts values from one data type to another using explicit casting syntax: `type'(expression)`. This ensures type safety and predictable behavior.
 
-**Type Conversion Theory:**
-```
-Source Type → Target Type
-    ↓
-Type Conversion Rules:
-├── Size Extension/Truncation
-├── Sign Extension
-├── Value Mapping
-└── Precision Loss
-```
-
-#### Code Example from `data_type_conversions.sv`
-
-(Reading the file to get the exact example)
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Floating Point Calculations**
-   - DSP verification
-   - Convert between real and integer
-
-2. **Protocol Field Extraction**
-   - Network protocol verification
-   - Extract fields of different widths
-
-3. **Bit Width Conversion**
-   - Interface adaptation (8-bit, 16-bit, 32-bit, 64-bit)
-   - Used in all verification
+**Common Conversions:**
+- `int'(real_value)`: Real to integer (truncates)
+- `bit'(value)`: Any type to single bit (0 or 1)
+- `byte'(value)`: Any type to 8-bit signed integer
+- `real'(int_value)`: Integer to floating point
 
 **When to Use:**
-- ✅ **Type Safety**: When type safety is important
-- ✅ **Clear Intent**: Making conversions explicit
-- ✅ **Debugging**: Easier to debug explicit conversions
-- ✅ **Portability**: Ensuring code works across simulators
+- When assigning between different types
+- To ensure explicit conversion
+- To avoid compilation warnings
+- For type safety
+
+**Example Usage:**
+```systemverilog
+real r = 2.99;
+int i = int'(r);  // i = 2 (truncated)
+```
 
 ---
 
 ### 1.7 Deep Copy vs Shallow Copy
-**📁 File References**: `deep_copy.sv`, `shallow_copy.sv`
+**Files**: `deep_copy.sv`, `shallow_copy.sv`
 
-#### Detailed Theory
+**What are Copies?**
+- **Deep Copy**: Creates completely independent copies; changes to copy don't affect original
+- **Shallow Copy**: Copies handle reference; both point to same object (changes affect both)
 
-**Memory Model:**
-```
-Shallow Copy:
-Object A ──┐
-           ├──→ Memory Location
-Object B ──┘    (Same object, multiple references)
+**Deep Copy:**
+- New object created
+- All data copied
+- Independent objects
+- Use: `copy = new(); copy.field = original.field;`
 
-Deep Copy:
-Object A ──→ Memory Location A
-Object B ──→ Memory Location B  (Different objects, independent)
-```
-
-**Copy Semantics:**
-- **Shallow Copy**: Copies handle (reference), not object
-- **Deep Copy**: Copies object, creates new memory
-
-#### Code Examples from Files
-
-(Reading the files to get the exact examples)
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Test Case Independence (Deep Copy)**
-   - Every test case needs independent transaction copies
-   - Used in all testbench development
-
-2. **Shared Configuration (Shallow Copy)**
-   - Shared configuration across multiple components
-   - All components see same configuration updates
+**Shallow Copy:**
+- Only handle copied
+- Both point to same object
+- Changes affect both
+- Use: `copy = new original;`
 
 **When to Use:**
-- **Deep Copy**: Test cases, independent processing, snapshots
-- **Shallow Copy**: Shared configuration, reference counting, memory efficiency
+- **Deep Copy**: When you need independent objects
+- **Shallow Copy**: When you want shared references
+
+**Example Usage:**
+```systemverilog
+// Deep copy
+p2 = p1.copy();  // Independent object
+
+// Shallow copy
+p2 = new p1;  // Same object reference
+```
 
 ---
 
 ## 2. Arrays and Data Structures
 
 ### 2.1 Fixed-Size Arrays
-**📁 File Reference**: `arrays/one_dimentional_array.sv`
+**Files**: 
+- `arrays/one_dimentional_array.sv`
+- `arrays/two_dimentional_array.sv`
+- `arrays/three_dimentional_array.sv`
+- `arrays/unpacked_array.sv`
 
-#### Detailed Theory
+**What are Fixed-Size Arrays?**
+Arrays with a predetermined size that is fixed at compile time. Memory is allocated statically.
 
-**Memory Layout:**
-```
-1D Array: Linear Memory
-[0][1][2][3][4]
- ↓  ↓  ↓  ↓  ↓
-Memory: Sequential locations
+**One-Dimensional Arrays:**
+- Syntax: `type name[size]`
+- Example: `int arr[10]`
+- Index range: 0 to size-1
+- Direct access: `arr[index]`
 
-Access Time: O(1) - Direct indexing
-```
+**Two-Dimensional Arrays:**
+- Syntax: `type name[rows][columns]`
+- Example: `int matrix[4][4]`
+- Access: `matrix[row][col]`
+- Useful for matrices, tables
 
-#### Code Example from `arrays/one_dimentional_array.sv`
+**Three-Dimensional Arrays:**
+- Syntax: `type name[depth][rows][columns]`
+- Example: `int cube[2][4][4]`
+- Access: `cube[depth][row][col]`
+- Useful for multi-dimensional data
 
-```systemverilog
-module sv;                                  // Declare module
-  int array_1[5];                           // Declare fixed-size array of 5 integers
-                                            // int: 32-bit signed integer
-                                            // array_1: array name
-                                            // [5]: size (indices 0 to 4)
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      array_1='{2,28,9,37,3};               // Array literal assignment
-                                            // '{2,28,9,37,3}: assigns values
-                                            // array_1[0]=2, array_1[1]=28, etc.
-      $display("array_1=%0p",array_1);      // Print array contents
-                                            // %0p: format specifier for unpacked array
-    end                                     // End sequential block
-endmodule                                  // End module
-```
-
-**Explanation:**
-- `int array_1[5]`: Declares fixed-size array (memory allocated at compile time)
-- `'{2,28,9,37,3}`: Array literal syntax (SystemVerilog specific)
-- `%0p`: Format specifier for unpacked arrays
-- Access: `array_1[index]` - O(1) time complexity
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Memory Modeling**
-   ```systemverilog
-   logic [7:0] ram [0:1048575];  // 1MB RAM
-   ram[0x1000] = 8'hFF;
-   ```
-   - All memory controller verification uses fixed arrays
-   - DDR, SRAM, Flash verification
-
-2. **Lookup Tables**
-   ```systemverilog
-   real sine_table [0:255];
-   sine_table[i] = $sin(angle);
-   ```
-   - DSP verification uses lookup tables
-   - Audio, video processing
-
-3. **Image Buffers**
-   ```systemverilog
-   bit [23:0] image_buffer [0:1919][0:1079];  // HD Image
-   ```
-   - GPU and camera ISP verification
-   - Image processing
+**Unpacked Arrays:**
+- Elements stored separately in memory
+- More efficient for individual element access
+- Standard array declaration
 
 **When to Use:**
-- ✅ **Known Size**: Size known at compile time
-- ✅ **Memory Efficiency**: Static allocation efficient
-- ✅ **Direct Access**: Fast direct indexing needed
-- ✅ **Hardware Modeling**: Modeling hardware structures
+- Known size at compile time
+- Memory efficiency important
+- Direct indexing needed
+
+**Example Usage:**
+```systemverilog
+int arr[5] = '{1,2,3,4,5};
+int matrix[2][2] = '{'{1,2}, '{3,4}};
+foreach(arr[i]) $display("arr[%0d]=%0d", i, arr[i]);
+```
 
 ---
 
 ### 2.2 Dynamic Arrays
-**📁 File Reference**: `arrays/dynamic_array.sv`
+**File**: `arrays/dynamic_array.sv`
 
-#### Detailed Theory
+**What are Dynamic Arrays?**
+Arrays with size that can be changed during simulation. Memory is allocated dynamically at runtime.
 
-**Memory Management:**
-```
-Dynamic Array Lifecycle:
-1. Declaration: int arr[];  (null handle, size=0)
-2. Allocation: arr = new[size];  (memory allocated)
-3. Usage: arr[index] = value;
-4. Resize: arr = new[new_size];  (reallocate)
-5. Deallocation: arr.delete();  (free memory)
-```
+**Key Features:**
+- Size not specified at declaration: `int arr[]`
+- Allocated at runtime: `arr = new[size]`
+- Can be resized: `arr = new[new_size]`
+- Memory efficient for variable-sized data
 
-**Memory Efficiency:**
-- **Static Arrays**: Allocate maximum size (wasteful)
-- **Dynamic Arrays**: Allocate only needed size (efficient)
-
-**Time Complexity:**
-- **Allocation**: O(n) - where n is size
-- **Access**: O(1) - direct indexing
-- **Resize**: O(n) - copy old to new
-
-#### Code Example from `arrays/dynamic_array.sv`
-
-```systemverilog
-module sv;                                  // Declare module
-  int array_1[];                            // Declare dynamic array (size not specified)
-                                            // []: empty brackets indicate dynamic array
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      $display("array_1=%0d",array_1.size()); // Print array size
-                                            // Initially 0 (uninitialized)
-      array_1= new[6];                      // new[6]: allocate memory for 6 elements
-                                            // array_1 now has size 6 (indices 0 to 5)
-      $display("array_1=%0d",array_1.size()); // Print new array size (should be 6)
-      array_1='{1,2,3,4,5,6};              // Array literal assignment
-                                            // Assigns values to all elements
-      foreach(array_1[i])                  // foreach loop: iterates through all elements
-        $display("array_1[%0d]=%0d",i,array_1[i]); // Print each element
-      array_1=new[20];                      // new[20]: reallocate memory for 20 elements
-                                            // Previous data is lost, new size is 20
-      $display("array_1=%0d",array_1.size()); // Print new array size (should be 20)
-      array_1.delete();                     // delete(): deallocates memory
-                                            // array_1.size() becomes 0 after deletion
-      $display("array_1=%0d",array_1.size()); // Print array size after deletion (should be 0)
-    end                                     // End sequential block
-endmodule                                  // End module
-```
-
-**Explanation:**
-- `int array_1[]`: Declares dynamic array (no size specified)
-- `new[6]`: Allocates memory at runtime for 6 elements
-- `array_1.size()`: Built-in method returns current size
-- `delete()`: Frees memory, size becomes 0
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Variable-Length Packet Processing**
-   ```systemverilog
-   class Packet;
-     byte packet_data[];  // Dynamic - size unknown
-     function void process_packet(int length);
-       packet_data = new[length];  // Allocate based on length
-     endfunction
-   endclass
-   ```
-   - Network protocol verification (Ethernet, PCIe, USB)
-   - Packets have variable lengths (64-1518 bytes for Ethernet)
-
-2. **Transaction List Collection**
-   ```systemverilog
-   Transaction collected_tx[];
-   // Collect unknown number of transactions
-   ```
-   - Testbenches collect variable numbers of transactions
-   - Used in all transaction-based verification
-
-3. **Coverage Data Collection**
-   ```systemverilog
-   int coverage_hits[];
-   // Collect variable amounts of coverage data
-   ```
-   - Coverage analysis collects variable amounts of data
-   - Used in all coverage-driven verification
+**Methods:**
+- `size()`: Returns current size
+- `delete()`: Deallocates memory
 
 **When to Use:**
-- ✅ **Variable Size**: Size unknown at compile time
-- ✅ **Memory Efficiency**: Only allocate what's needed
-- ✅ **Runtime Sizing**: Size determined at runtime
-- ✅ **Flexible Structures**: Structures that grow/shrink
+- Size unknown at compile time
+- Size changes during simulation
+- Memory efficiency for sparse data
+
+**Example Usage:**
+```systemverilog
+int arr[];
+arr = new[10];      // Allocate 10 elements
+arr = new[20];      // Resize to 20
+arr.delete();       // Deallocate
+```
 
 ---
 
 ### 2.3 Associative Arrays
-**📁 File References**: `arrays/associative_array/integer_index.sv`, `arrays/associative_array/string_index.sv`
+**Files**: 
+- `arrays/associative_array/integer_index.sv`
+- `arrays/associative_array/string_index.sv`
 
-#### Detailed Theory
+**What are Associative Arrays?**
+Sparse arrays using integer or string keys (like hash tables or dictionaries). Only occupied indices consume memory.
 
-**Hash Table Theory:**
-```
-Associative Array = Hash Table
-Key → Hash Function → Index → Value
+**Integer Index:**
+- Syntax: `type name[*]`
+- Example: `int arr[*]`
+- Keys: Any integer value
+- Ordered by key value
 
-Integer Index:
-Key: 100 → Index → Value stored
-Key: 500 → Index → Value stored
-(Sparse: only occupied indices exist)
+**String Index:**
+- Syntax: `type name[string]`
+- Example: `int arr[string]`
+- Keys: String values
+- Ordered lexicographically
 
-String Index:
-Key: "addr" → Hash → Index → Value stored
-Key: "data" → Hash → Index → Value stored
-```
-
-**Memory Efficiency:**
-- **Fixed Array**: Allocate full range (wasteful for sparse data)
-- **Associative Array**: Only allocate occupied entries (efficient)
-
-**Time Complexity:**
-- **Insert**: O(1) average case
-- **Lookup**: O(1) average case
-- **Delete**: O(1) average case
-
-#### Code Examples from Files
-
-(Reading the files to get the exact examples)
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Sparse Address Space (Integer Index)**
-   ```systemverilog
-   int address_map[*];  // Only occupied addresses exist
-   address_map[0x1000] = 0xDEADBEEF;
-   ```
-   - Memory controller verification models sparse address maps
-   - Virtual memory, MMU verification
-
-2. **Configuration Storage (String Index)**
-   ```systemverilog
-   string config[string];
-   config["debug_level"] = "2";
-   ```
-   - Testbench configuration uses string-indexed associative arrays
-   - Used in all UVM-based testbenches
-
-3. **Cache Tag Array**
-   ```systemverilog
-   bit [31:0] cache_tags[*];
-   cache_tags[0x1000] = 0x12345678;
-   ```
-   - Cache verification models tag arrays as associative arrays
-   - CPU cache verification
+**Methods:**
+- `num()`: Number of entries
+- `first(index)`: First key
+- `last(index)`: Last key
+- `next(index)`: Next key
+- `prev(index)`: Previous key
+- `delete()`: Remove all entries
 
 **When to Use:**
-- ✅ **Sparse Data**: Few entries in large space
-- ✅ **Lookup Operations**: Fast lookup needed
-- ✅ **Memory Efficiency**: Sparse data storage
-- ✅ **Key-Value Storage**: Key-value pair storage
+- Sparse data (few entries)
+- Non-contiguous indices
+- Key-value pairs
+- Memory efficiency
 
----
-
-### 2.4 Queue Data Structures
-**📁 File Reference**: `queue/unbounded_queue.sv`
-
-#### Detailed Theory
-
-**Queue Theory:**
-```
-Queue Operations:
-├── FIFO (First-In-First-Out)
-│   ├── push_back() → Add to end
-│   └── pop_front() → Remove from front
-└── LIFO (Last-In-First-Out)
-    ├── push_front() → Add to front
-    └── pop_back() → Remove from end
-```
-
-**Memory Model:**
-```
-Unbounded Queue: [$]
-[ ] → [1] → [1,2] → [1,2,3] → Grows dynamically
-
-Bounded Queue: [$:max]
-[ ] → [1] → [1,2] → [1,2,3] → Max size limit
-```
-
-#### Code Example from `queue/unbounded_queue.sv`
-
+**Example Usage:**
 ```systemverilog
-module sv;                                  // Declare module
-  int queue_1[$];                           // Declare unbounded queue of integers
-                                            // [$]: empty brackets indicate unbounded queue
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      $display("queue_1=%0d",queue_1.size()); // Print queue size (initially 0)
-      queue_1={1,2,3,4,5};                 // Concatenation assignment
-                                            // {1,2,3,4,5}: assigns values to queue
-      $display("queue_1=%0p",queue_1);    // Print entire queue
-      foreach(queue_1[i])                  // foreach loop: iterates through all elements
-        $display("queue_1[%0d]=%0d",i,queue_1[i]); // Print each element
-      queue_1.push_front(2);                // push_front(): inserts element at front
-                                            // queue_1 now: 2,1,2,3,4,5
-      foreach(queue_1[i])
-        $display("queue_1[%0d]=%0d",i,queue_1[i]);
-      queue_1.push_back(9);                 // push_back(): inserts element at back
-                                            // queue_1 now: 2,1,2,3,4,5,9
-      foreach(queue_1[i])
-        $display("queue_1[%0d]=%0d",i,queue_1[i]);
-      queue_1.insert(2,7);                   // insert(): inserts element at index 2
-                                            // queue_1 now: 2,1,7,2,3,4,5,9
-      foreach(queue_1[i])
-        $display("queue_1[%0d]=%0d",i,queue_1[i]);
-      queue_1.pop_front();                 // pop_front(): removes front element
-                                            // queue_1 now: 1,7,2,3,4,5,9
-      foreach(queue_1[i])
-        $display("queue_1[%0d]=%0d",i,queue_1[i]);
-      queue_1.pop_back();                   // pop_back(): removes back element
-                                            // queue_1 now: 1,7,2,3,4,5
-      foreach(queue_1[i])
-        $display("queue_1[%0d]=%0d",i,queue_1[i]);
-      queue_1.delete();                     // delete(): removes all elements
-                                            // queue_1.size() becomes 0
-      $display("queue_1=%0p",queue_1);    // Print queue (should be empty)
-    end                                     // End sequential block
-endmodule                                  // End module
+int arr[*];
+arr[100] = 10;
+arr[500] = 20;
+foreach(arr[i]) $display("arr[%0d]=%0d", i, arr[i]);
 ```
-
-**Explanation:**
-- `int queue_1[$]`: Unbounded queue (grows dynamically)
-- `{1,2,3,4,5}`: Queue literal assignment
-- `push_front()`: Add to beginning (LIFO)
-- `push_back()`: Add to end (FIFO)
-- `insert(index, value)`: Insert at specific index
-- `pop_front()`: Remove from beginning
-- `pop_back()`: Remove from end
-- `delete()`: Clear all elements
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Scoreboard Implementation**
-   ```systemverilog
-   class Scoreboard;
-     Transaction expected[$];
-     Transaction actual[$];
-     function void add_expected(Transaction tx);
-       expected.push_back(tx);
-     endfunction
-   endclass
-   ```
-   - All testbenches use scoreboards implemented with queues
-   - Used in 100% of verification environments
-
-2. **FIFO Buffer Modeling**
-   ```systemverilog
-   class FIFO;
-     int fifo_data[$:63];  // Bounded FIFO: 64 entries
-     task write(int data);
-       if (fifo_data.size() < 64) begin
-         fifo_data.push_back(data);
-       end
-     endtask
-   endclass
-   ```
-   - FIFO verification models hardware FIFOs using queues
-   - Used in all FIFO IP verification
-
-**When to Use:**
-- ✅ **FIFO Operations**: First-in-first-out processing
-- ✅ **LIFO Operations**: Last-in-first-out processing
-- ✅ **Buffering**: Data buffering
-- ✅ **Event Queues**: Event processing in order
 
 ---
 
-## 3. Object-Oriented Programming
+### 2.4 Array Methods
 
-### 3.1 Classes and Objects
-**📁 File Reference**: `oops_concepts/oops_concept.sv`
+#### Reduction Methods
+**File**: `arrays/array_reduction_methods.sv`
 
-#### Detailed Theory
+Perform operations on all array elements, returning a single value.
 
-**OOP Pillars:**
-```
-1. Encapsulation: Data + Methods together
-2. Inheritance: Code reuse through inheritance
-3. Polymorphism: Runtime method resolution
-4. Abstraction: Hide implementation details
-```
+**Methods:**
+- `sum()`: Sum of all elements
+- `product()`: Product of all elements
+- `or()`, `and()`, `xor()`: Bitwise operations
+- `sum() with (item*2)`: Transform before operation
 
-**Class Memory Model:**
-```
-Class Definition (Template):
-┌─────────────────┐
-│ Class: Packet   │
-│ ├── int addr    │
-│ ├── int data    │
-│ └── function    │
-└─────────────────┘
-
-Object Instance (Memory):
-┌─────────────────┐
-│ Object 1        │
-│ addr: 0x1000    │
-│ data: 0xDEAD    │
-└─────────────────┘
-```
-
-#### Code Example from `oops_concepts/oops_concept.sv`
-
+**Example Usage:**
 ```systemverilog
-class rajesh;                               // class: define a class (blueprint for objects)
-                                            // rajesh: class name
-  int addr;                                 // Member variable: address (32-bit integer)
-  int data;                                 // Member variable: data (32-bit integer)
-  function display();                       // function: define a method that returns a value
-                                            // display(): function name
-    $display("i am rajesh");               // Print message
-  endfunction                               // End function
-  task run();                               // task: define a method that can have delays
-                                            // run(): task name
-    $display("i am running");              // Print message
-  endtask                                   // End task
-endclass                                    // End class
-
-module sv;                                  // Declare module
-  rajesh r;                                 // Declare handle 'r' of type 'rajesh'
-                                            // r: handle name (pointer/reference to object)
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      r=new();                              // new(): constructor creates a new object
-                                            // Allocates memory and creates instance
-      r.addr=90;                            // Access member: assign 90 to addr
-      r.data=30;                            // Access member: assign 30 to data
-      r.display();                          // Call function: execute display()
-      r.run();                              // Call task: execute run()
-      $display("addr=%0d,data=%0d",r.addr,r.data); // Print addr and data
-    end                                     // End sequential block
-endmodule                                  // End module
+int arr[5] = '{1,2,3,4,5};
+int result = arr.sum();              // 15
+result = arr.sum() with (item*2);    // 30
 ```
 
-**Explanation:**
-- `class rajesh`: Defines a class (template for objects)
-- `int addr, data`: Member variables (encapsulated data)
-- `function display()`: Method that returns value (no delays)
-- `task run()`: Method that can have delays
-- `rajesh r`: Declares handle (object reference)
-- `r=new()`: Creates object instance (allocates memory)
-- `r.addr`, `r.data`: Access member variables
-- `r.display()`, `r.run()`: Call class methods
+#### Ordering Methods
+**File**: `arrays/array_ordering_methods.sv`
 
-#### Where It's Used
+Rearrange array elements in place (modify original array).
 
-**Industry Applications:**
-1. **Transaction-Based Verification**
-   ```systemverilog
-   class Transaction;
-     int addr;
-     int data;
-     function void display();
-       $display("Transaction: addr=0x%0h, data=0x%0h", addr, data);
-     endfunction
-   endclass
-   ```
-   - All modern verification uses transaction-based approach
-   - Used in UVM, OVM, VMM methodologies
+**Methods:**
+- `sort()`: Ascending order
+- `rsort()`: Descending order
+- `shuffle()`: Random order
+- `reverse()`: Reverse order
 
-2. **Component-Based Testbench**
-   ```systemverilog
-   class Driver;
-     virtual task drive(Transaction tx);
-       // Drive transaction to DUT
-     endtask
-   endclass
-   ```
-   - UVM uses component-based architecture
-   - All UVM testbenches use classes for components
-
-**When to Use:**
-- ✅ **Verification**: All modern verification
-- ✅ **Code Reuse**: When code reuse needed
-- ✅ **Complex Systems**: Complex verification systems
-- ✅ **Team Development**: Team-based development
-
----
-
-### 3.2 Inheritance
-**📁 File Reference**: `oops_concepts/inheritance.sv`
-
-#### Detailed Theory
-
-**Inheritance Theory:**
-```
-Parent Class (Base)
-    ↓ (extends)
-Child Class (Derived)
-
-Child inherits:
-├── Member Variables
-├── Methods
-└── Can add new members
-```
-
-**Memory Model:**
-```
-Parent Object:
-┌─────────────┐
-│ Parent Data │
-└─────────────┘
-
-Child Object:
-┌─────────────┐
-│ Parent Data │ ← Inherited
-├─────────────┤
-│ Child Data  │ ← New
-└─────────────┘
-```
-
-#### Code Example from `oops_concepts/inheritance.sv`
-
+**Example Usage:**
 ```systemverilog
-class parent;                               // Parent class (base class)
-  int addr;                                 // Member variable: address
-  int data;                                 // Member variable: data
-  function display();                       // Function: display method
-    $display("i am parent");               // Print message
-    endfunction                             // End function
-  task run();                               // Task: run method
-    $display("i am running");              // Print message
-  endtask                                   // End task
-endclass                                    // End parent class
-
-class child extends parent;                // Child class (derived class)
-                                            // extends parent: inheritance keyword
-                                            // child inherits all members from parent
-endclass                                    // End child class
-                                            // child has no new members, only inherited ones
-
-module sv;                                  // Declare module
-  parent p;                                // Declare handle 'p' of type 'parent'
-  child c;                                  // Declare handle 'c' of type 'child'
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      p=new();                              // Create new parent object
-      c=new();                              // Create new child object
-      c.display();                          // Call display() inherited from parent
-                                            // c.display(): accesses inherited method
-      c.run();                              // Call run() inherited from parent
-                                            // c.run(): accesses inherited method
-      c.addr=90;                            // Access addr member inherited from parent
-                                            // c.addr: accesses inherited member variable
-      c.data=30;                            // Access data member inherited from parent
-                                            // c.data: accesses inherited member variable
-      $display("addr=%0d,data=%0d",c.addr,c.data); // Print inherited addr and data
-    end                                     // End sequential block
-endmodule                                  // End module
+int arr[5] = '{3,1,5,2,4};
+arr.sort();      // {1,2,3,4,5}
+arr.reverse();   // {5,4,3,2,1}
 ```
 
-**Explanation:**
-- `class parent`: Base class definition
-- `class child extends parent`: Child class inherits from parent
-- `extends`: Inheritance keyword
-- `c.display()`, `c.run()`: Child can call parent methods
-- `c.addr`, `c.data`: Child can access parent member variables
+#### Locator Methods
+**File**: `arrays/array_locator_or_finding_methods.sv`
 
-#### Where It's Used
+Find elements matching criteria, returning a queue (doesn't modify original).
 
-**Industry Applications:**
-1. **UVM Component Hierarchy**
-   ```systemverilog
-   class uvm_component;
-     // Base functionality
-   endclass
-   
-   class uvm_test extends uvm_component;
-     // Test-specific functionality
-   endclass
-   ```
-   - UVM uses extensive inheritance
-   - All UVM components inherit from `uvm_component`
+**Methods:**
+- `min()`: Minimum value(s)
+- `max()`: Maximum value(s)
+- `find with (condition)`: All matching elements
+- `find_first with (condition)`: First match
+- `find_last with (condition)`: Last match
+- `unique()`: Unique values only
 
-2. **Transaction Class Hierarchy**
-   ```systemverilog
-   class BaseTransaction;
-     int addr;
-     int data;
-   endclass
-   
-   class EthernetTransaction extends BaseTransaction;
-     int length;
-     bit [47:0] mac_addr;
-   endclass
-   ```
-   - Protocol verification uses inheritance
-   - Base transaction class extended for specific protocols
-
-**When to Use:**
-- ✅ **Code Reuse**: Extending existing classes
-- ✅ **Hierarchical Design**: Hierarchical class design
-- ✅ **Framework Extension**: Extending frameworks
-- ✅ **Polymorphism**: Enabling polymorphism
-
----
-
-## 4. Constraints and Randomization
-
-### 4.1 Inside Constraint
-**📁 File Reference**: `constraints/inside_constraint.sv`
-
-#### Detailed Theory
-
-**Inside Constraint Theory:**
-```
-inside = Set Membership
-variable inside {set}
-
-Set Types:
-├── Single Value: {10}
-├── Range: {[10:20]}
-├── Multiple Ranges: {[10:20], [30:40]}
-└── Mixed: {10, [20:30], 40}
-```
-
-**Constraint Solving:**
-```
-Constraint Solver:
-Given: rand bit [5:0] data;
-Constraint: data inside {[10:20], [30:40]};
-Solver finds: data ∈ {10,11,...,20,30,31,...,40}
-```
-
-#### Code Example from `constraints/inside_constraint.sv`
-
+**Example Usage:**
 ```systemverilog
-class packet;                               // class: define a class for randomization
-  rand bit [5:0]data;                       // rand: keyword makes variable randomizable
-                                            // bit [5:0]: 6-bit unsigned type (range 0 to 63)
-                                            // data: variable name
-  constraint c1{data inside {[10:20],[30:40]};} // constraint: define a constraint block
-                                            // c1: constraint name
-                                            // data inside {[10:20],[30:40]}: inside constraint
-                                            // inside: keyword restricts values to specified ranges
-                                            // {[10:20],[30:40]}: set of valid ranges
-                                            // [10:20]: range from 10 to 20 (inclusive)
-                                            // [30:40]: range from 30 to 40 (inclusive)
-                                            // data can only be between 10-20 or 30-40
-endclass                                    // End class
-
-module sv;                                  // Declare module
-  packet p;                                 // Declare handle 'p' of type 'packet'
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      p=new();                              // Create new packet object
-      repeat(5)                             // repeat: loop construct (5 times)
-        begin                               // Begin loop body
-          p.randomize();                    // randomize(): method generates random values
-                                            // p.randomize(): randomizes rand variables
-                                            // Applies constraint c1: data must be 10-20 or 30-40
-          $display("data=%0d",p.data);     // Print randomized data value
-                                            // Should print values between 10-20 or 30-40
-        end                                 // End loop body
-    end                                     // End sequential block
-endmodule                                  // End module
+int arr[5] = '{1,2,2,5,5};
+int q[$];
+q = arr.min();                    // {1}
+q = arr.find with (item > 3);    // {5,5}
+q = arr.unique();                 // {1,2,5}
 ```
-
-**Explanation:**
-- `rand bit [5:0] data`: Randomizable variable (6-bit, range 0-63)
-- `constraint c1`: Named constraint block
-- `data inside {[10:20],[30:40]}`: Restricts values to two ranges
-- `p.randomize()`: Solves constraints and assigns random value
-- Values generated: 10-20 or 30-40 (never other values)
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Address Range Generation**
-   ```systemverilog
-   class MemoryTransaction;
-     rand bit [31:0] addr;
-     constraint valid_addr {
-       addr inside {
-         [32'h0000_0000:32'h0000_FFFF],  // Region 1
-         [32'h1000_0000:32'h1FFF_FFFF],  // Region 2
-         [32'h8000_0000:32'h8FFF_FFFF]  // Region 3
-       };
-     }
-   endclass
-   ```
-   - Memory verification uses inside constraints for valid address generation
-   - Used in all memory verification
-
-2. **Protocol Type Generation**
-   ```systemverilog
-   class IPPacket;
-     rand bit [7:0] protocol;
-     constraint valid_protocol {
-       protocol inside {
-         1,   // ICMP
-         6,   // TCP
-         17,  // UDP
-         41   // IPv6
-       };
-     }
-   endclass
-   ```
-   - Protocol verification uses inside constraints for valid protocol types
-   - Used in network protocol verification
-
-**When to Use:**
-- ✅ **Valid Ranges**: Restricting to valid ranges
-- ✅ **Protocol Fields**: Protocol field generation
-- ✅ **Register Values**: Valid register values
-- ✅ **Set Membership**: Set membership constraints
 
 ---
 
-### 4.2 Randomization (Repeat)
-**📁 File Reference**: `randomization/repeat.sv`
+### 2.5 Queues
+**Files**: `queue/bounded_queue.sv`, `queue/unbounded_queue.sv`
 
-#### Detailed Theory
+**What are Queues?**
+Dynamic data structures with FIFO/LIFO access, similar to linked lists but more efficient.
 
-**Randomization Theory:**
+**Unbounded Queues:**
+- Syntax: `type name[$]`
+- No size limit
+- Flexible size
+
+**Bounded Queues:**
+- Syntax: `type name[$:max_size]`
+- Maximum size limit
+- Error if exceeded
+
+**Methods:**
+- `push_front(value)`: Insert at front
+- `push_back(value)`: Insert at back
+- `pop_front()`: Remove front element
+- `pop_back()`: Remove back element
+- `insert(index, value)`: Insert at position
+- `delete()`: Remove all elements
+- `size()`: Current size
+
+**When to Use:**
+- FIFO/LIFO operations
+- Dynamic size needed
+- Efficient insertion/deletion
+
+**Example Usage:**
+```systemverilog
+int q[$];
+q.push_back(10);
+q.push_front(5);
+q.insert(1, 7);
+int val = q.pop_front();
 ```
-rand: Standard Randomization
+
+---
+
+### 2.6 Strings
+**File**: `string/string.sv`
+
+**What are Strings?**
+Dynamic character arrays with built-in manipulation methods.
+
+**Key Methods:**
+- `len()`: String length
+- `toupper()`: Convert to uppercase
+- `tolower()`: Convert to lowercase
+- `putc(index, char)`: Replace character at index
+- `getc(index)`: Get character at index
+- `substr(start, end)`: Extract substring
+
+**When to Use:**
+- Text processing
+- Message formatting
+- String manipulation
+
+**Example Usage:**
+```systemverilog
+string s = "Hello";
+int len = s.len();              // 5
+string upper = s.toupper();     // "HELLO"
+s.putc(0, "h");                 // "hello"
+```
+
+---
+
+## 3. Data Types
+
+### 3.1 Enumerated Types
+**File**: `datatypes/enum_datatype.sv`
+
+**What are Enums?**
+Named constants with automatic integer assignments (starting at 0). Makes code more readable.
+
+**Key Features:**
+- Readable code: `enum {red, blue, green} color`
+- Automatic integer assignment: red=0, blue=1, green=2
+- Type safety
+- Methods: `first()`, `last()`, `next()`, `prev()`
+
+**When to Use:**
+- Finite set of values
+- Readable code
+- State machines
+- Configuration options
+
+**Example Usage:**
+```systemverilog
+enum {IDLE, RUN, STOP} state;
+state = state.first();  // IDLE
+state = state.next();   // RUN
+```
+
+---
+
+### 3.2 Structures
+**File**: `datatypes/struct_datatype.sv`
+
+**What are Structures?**
+Groups related variables together, accessed using dot notation.
+
+**Key Features:**
+- Member access: `struct_name.member`
+- Literal assignment: `'{value1, value2, ...}`
+- Packed and unpacked structures
+- Memory layout control
+
+**When to Use:**
+- Grouping related data
+- Packet structures
+- Configuration structures
+- Record-like data
+
+**Example Usage:**
+```systemverilog
+struct {
+  bit valid;
+  int data;
+  byte addr;
+} packet;
+
+packet = '{1, 100, 8'hFF};
+```
+
+---
+
+### 3.3 Typedef
+**File**: `datatypes/typedef_datatype.sv`
+
+**What is Typedef?**
+Creates type aliases for reusable type definitions.
+
+**Key Features:**
+- User-defined types
+- Code readability
+- Type reuse
+- Consistent naming
+
+**When to Use:**
+- Complex type definitions
+- Code reusability
+- Clear type names
+- Multiple uses of same type
+
+**Example Usage:**
+```systemverilog
+typedef enum {RED, BLUE, GREEN} color_type;
+color_type c1, c2;  // Both same type
+```
+
+---
+
+## 4. Object-Oriented Programming
+
+### 4.1 Classes and Objects
+**File**: `oops_concepts/oops_concept.sv`
+
+**What are Classes?**
+Classes encapsulate data (member variables) and methods (functions/tasks) together.
+
+**Key Concepts:**
+- Class definition: `class class_name`
+- Object creation: `handle = new()`
+- Member access: `object.member`
+- Encapsulation
+- Data hiding
+
+**Components:**
+- Member variables: Data
+- Methods: Functions and tasks
+- Constructor: `new()`
+- Handles: Object references
+
+**When to Use:**
+- Object-oriented design
+- Encapsulation needed
+- Code reusability
+- Complex data structures
+
+**Example Usage:**
+```systemverilog
+class Packet;
+  int addr;
+  int data;
+  function void display();
+    $display("addr=%0d, data=%0d", addr, data);
+  endfunction
+endclass
+
+Packet p = new();
+p.addr = 10;
+p.display();
+```
+
+---
+
+### 4.2 Inheritance
+**File**: `oops_concepts/inheritance.sv`
+
+**What is Inheritance?**
+Child classes inherit all members (variables and methods) from parent classes.
+
+**Key Features:**
+- Syntax: `class child extends parent`
+- Access to parent members
+- Code reuse
+- Hierarchical relationships
+
+**Benefits:**
+- Code reuse
+- Consistent interface
+- Polymorphism support
+- Extensibility
+
+**When to Use:**
+- Related classes
+- Shared functionality
+- Hierarchical design
+- Code reuse
+
+**Example Usage:**
+```systemverilog
+class Parent;
+  int addr;
+  function void display();
+    $display("Parent");
+  endfunction
+endclass
+
+class Child extends Parent;
+  // Inherits addr and display()
+endclass
+```
+
+---
+
+### 4.3 Polymorphism
+**File**: `oops_concepts/polymorphism.sv`
+
+**What is Polymorphism?**
+Runtime method resolution based on object type. Parent handle can point to child object.
+
+**Key Features:**
+- `virtual` keyword enables polymorphism
+- Parent handle pointing to child object
+- Runtime binding
+- Method overriding
+
+**Requirements:**
+- `virtual` keyword in parent method
+- Method override in child
+- Parent handle, child object
+
+**When to Use:**
+- Dynamic method selection
+- Interface-based design
+- Extensible systems
+- Generic programming
+
+**Example Usage:**
+```systemverilog
+class Parent;
+  virtual function void display();
+    $display("Parent");
+  endfunction
+endclass
+
+class Child extends Parent;
+  function void display();
+    $display("Child");
+  endfunction
+endclass
+
+Parent p;
+Child c = new();
+p = c;  // Polymorphism
+p.display();  // Calls Child's display()
+```
+
+---
+
+### 4.4 $cast
+**File**: `oops_concepts/$cast.sv`
+
+**What is $cast?**
+Safe type conversion between related types (parent to child). Returns 1 on success, 0 on failure.
+
+**Key Features:**
+- Safe downcasting
+- Type checking
+- Error handling
+- Returns success/failure
+
+**When to Use:**
+- Parent to child conversion
+- Type safety needed
+- Dynamic type checking
+- Safe conversions
+
+**Example Usage:**
+```systemverilog
+Parent p;
+Child c = new();
+p = c;
+if ($cast(c, p)) begin
+  // Safe conversion successful
+  c.child_method();
+end
+```
+
+---
+
+### 4.5 Super Keyword
+**File**: `oops_concepts/super_keyword.sv`
+
+**What is Super?**
+Accesses parent class members from child class. Explicitly calls parent methods.
+
+**Key Features:**
+- `super.method()`: Call parent method
+- `super.variable`: Access parent variable
+- Explicit parent access
+- Override with parent call
+
+**When to Use:**
+- Extending parent functionality
+- Calling parent from child
+- Chaining constructors
+- Partial overrides
+
+**Example Usage:**
+```systemverilog
+class Child extends Parent;
+  function void display();
+    $display("Child");
+    super.display();  // Call parent's display
+  endfunction
+endclass
+```
+
+---
+
+### 4.6 This Keyword
+**File**: `oops_concepts/this_keyword.sv`
+
+**What is This?**
+Refers to current object instance. Resolves name conflicts between parameters and members.
+
+**Key Features:**
+- `this.member`: Access member variable
+- Resolve name conflicts
+- Self-reference
+- Clear member access
+
+**When to Use:**
+- Parameter shadows member
+- Constructor parameters
+- Clear member access
+- Name conflict resolution
+
+**Example Usage:**
+```systemverilog
+class Packet;
+  int addr;
+  function void set(int addr);
+    this.addr = addr;  // Resolve conflict
+  endfunction
+endclass
+```
+
+---
+
+### 4.7 Virtual Classes (Abstract Classes)
+**File**: `oops_concepts/abstraction_or_virtual_class.sv`
+
+**What are Virtual Classes?**
+Cannot be instantiated directly. Must be extended by non-virtual classes. Serve as base templates.
+
+**Key Features:**
+- `virtual class` declaration
+- Base class design
+- Forced inheritance
+- Template for derived classes
+
+**When to Use:**
+- Base class design
+- Template classes
+- Interface definition
+- Forced inheritance
+
+**Example Usage:**
+```systemverilog
+virtual class Base;
+  // Base class definition
+endclass
+
+class Derived extends Base;
+  // Must extend to use
+endclass
+```
+
+---
+
+## 5. Constraints and Randomization
+
+### 5.1 Basic Constraints
+**File**: `constraints/if_else_constraint.sv`
+
+**What are Constraints?**
+Constraints control randomization behavior, ensuring generated values meet specific requirements.
+
+**If-Else Constraints:**
+- Conditional constraint application
+- Dynamic constraint selection
+- Based on conditions
+
+**When to Use:**
+- Conditional value assignment
+- Dynamic constraints
+- Complex constraint logic
+
+**Example Usage:**
+```systemverilog
+constraint c1 {
+  if (mode == 0)
+    data inside {[0:10]};
+  else
+    data inside {[20:30]};
+}
+```
+
+---
+
+### 5.2 Inside Constraint
+**File**: `constraints/inside_constraint.sv`
+
+**What is Inside Constraint?**
+Restricts values to specified ranges or sets.
+
+**Key Features:**
+- Syntax: `variable inside {range1, range2, ...}`
+- Multiple valid ranges
+- Set-based constraints
+- Inclusive ranges
+
+**When to Use:**
+- Specific value ranges
+- Multiple valid sets
+- Range restrictions
+
+**Example Usage:**
+```systemverilog
+constraint c1 {
+  data inside {[10:20], [30:40]};
+}
+```
+
+---
+
+### 5.3 Distribution Constraint
+**File**: `constraints/distribution_constraint.sv`
+
+**What is Distribution Constraint?**
+Assigns probability weights to value ranges.
+
+**Key Features:**
+- `dist` keyword
+- Weight assignment: `:=` (equal), `:/` (distributed)
+- Probability control
+- Weighted randomization
+
+**When to Use:**
+- Weighted randomization
+- Probability control
+- Biased distributions
+
+**Example Usage:**
+```systemverilog
+constraint c1 {
+  data dist {[0:10] := 5, [20:30] := 10};
+}
+```
+
+---
+
+### 5.4 Unique Constraint
+**File**: `constraints/unique_constraint.sv`
+
+**What is Unique Constraint?**
+Ensures all values in a set are different.
+
+**Key Features:**
+- `unique {variable1, variable2, ...}`
+- No duplicate values
+- Array element uniqueness
+
+**When to Use:**
+- Unique values needed
+- No duplicates
+- Array uniqueness
+
+**Example Usage:**
+```systemverilog
+constraint c1 {
+  unique {arr};
+}
+```
+
+---
+
+### 5.5 Soft Constraint
+**File**: `constraints/soft_constraint.sv`
+
+**What is Soft Constraint?**
+Constraints that can be violated if hard constraints conflict. Hard constraints take precedence.
+
+**Key Features:**
+- `soft` keyword
+- Can be violated
+- Hard constraints win
+- Flexible constraint resolution
+
+**When to Use:**
+- Preferred values
+- Flexible constraints
+- Constraint conflicts
+- Fallback values
+
+**Example Usage:**
+```systemverilog
+constraint c1 {
+  soft data inside {[0:10]};
+}
+constraint c2 {
+  data inside {[20:30]};  // Hard - takes precedence
+}
+```
+
+---
+
+### 5.6 Inline Constraint
+**File**: `constraints/inline_constraint.sv`
+
+**What are Inline Constraints?**
+Constraints specified directly in `randomize()` call, temporarily overriding class constraints.
+
+**Key Features:**
+- Temporary constraint application
+- Override class constraints
+- Dynamic constraint modification
+- Per-call constraints
+
+**When to Use:**
+- One-time constraint changes
+- Dynamic constraints
+- Override class constraints
+- Test-specific constraints
+
+**Example Usage:**
+```systemverilog
+p.randomize() with {data > 100;};
+```
+
+---
+
+### 5.7 Additional Constraint Examples
+- **`constraint_out_of_the_class.sv`**: Constraints defined outside class
+- **`inheritance_in_constraint.sv`**: Constraints in inherited classes
+- **`solve_a_before_b_constraint.sv`**: Constraint ordering
+- **`no_is_divided_by_4.sv`**: Mathematical constraints
+- **`fibonacci_series_by_using_constraint.sv`**: Complex pattern constraints
+
+---
+
+### 5.8 Randomization
+
+#### Rand vs Randc
+**Files**: `randomization/repeat.sv`, `randomization/without_repeat.sv`
+
+**Rand:**
+- Generates new random value each time
 - May repeat values
-- Independent random values
-- Used for: General randomization
+- Standard randomization
 
-randc: Cyclic Randomization
+**Randc:**
+- Cyclic randomization
 - All values before repeating
-- Ensures coverage
-- Used for: Coverage-driven verification
-```
+- Better coverage
 
-#### Code Example from `randomization/repeat.sv`
-
+**Example Usage:**
 ```systemverilog
-class packet;                               // class: define a class for randomization
-  rand bit[4:0]a;                          // rand: keyword makes variable randomizable
-                                            // bit[4:0]: 5-bit unsigned type (range 0 to 31)
-                                            // a: variable name
-                                            // rand: generates new random value each time randomize() is called
-endclass                                   // End class
-
-module sv;                                 // Declare module
-  packet p;                                // Declare handle 'p' of type 'packet'
-  initial                                  // Initial block
-    begin                                  // Begin sequential block
-      p=new();                             // Create new packet object
-      repeat(12)                           // repeat: loop construct (12 times)
-      begin                                // Begin loop body
-        p.randomize();                     // randomize(): method generates random values
-                                            // p.randomize(): randomizes rand variables
-                                            // Generates new random value for 'a' each iteration
-                                            // rand: generates different values each time
-        $display("a=%0d",p.a);            // Print randomized value
-                                            // Prints different random values (0-31) each iteration
-      end                                  // End loop body
-    end                                    // End sequential block
-endmodule                                  // End module
+class Packet;
+  rand bit[4:0] a;   // May repeat
+  randc bit[4:0] b;  // No repeats until all seen
+endclass
 ```
 
-**Explanation:**
-- `rand bit[4:0] a`: Randomizable variable (5-bit, range 0-31)
-- `repeat(12)`: Loop executes 12 times
-- `p.randomize()`: Generates new random value each iteration
-- `rand`: May repeat values (unlike `randc`)
+#### Randomization Methods
+**Files**: 
+- `randomization/by_using_range_method.sv`
+- `randomization/different_modes.sv`
+- `randomization/without_using_rand.sv`
 
-#### Where It's Used
-
-**Industry Applications:**
-1. **Test Case Generation**
-   ```systemverilog
-   class TestCase;
-     rand int test_length;
-     rand int test_mode;
-   endclass
-   
-   TestCase test = new();
-   repeat(100) begin
-     test.randomize();
-     run_test(test.test_length);
-   end
-   ```
-   - All test generation uses randomization
-   - Coverage-driven verification relies on randomization
-
-**When to Use:**
-- **rand**: Standard randomization
-- **randc**: When coverage is critical
+**Methods:**
+- `randomize()`: Standard randomization
+- `randomize() with {...}`: Inline constraints
+- `$urandom_range(min, max)`: Random range
 
 ---
 
-## 5. Assertions
+## 6. Assertions
 
-### 5.1 Immediate Assertions
-**📁 File Reference**: `assertions/immidiate_assertion.sv`
+### 6.1 Immediate Assertions
+**File**: `assertions/immidiate_assertion.sv`
 
-#### Detailed Theory
+**What are Immediate Assertions?**
+Execute immediately when encountered (not clocked). Check conditions at current simulation time.
 
-**Immediate Assertion Theory:**
-```
-Immediate Assertion:
-- Executes immediately
-- Not clocked
-- Combinational checks
+**Key Features:**
+- `assert (condition)`
 - Pass/fail blocks
-```
-
-#### Code Example from `assertions/immidiate_assertion.sv`
-
-```systemverilog
-module sv;                                  // Declare module
-  bit clk;                                  // Declare clock signal
-  bit a,b;                                  // Declare two bit variables
-  
-  always #2 clk=~clk;                       // always block: continuous process
-                                            // #2: delay of 2 time units
-                                            // clk=~clk: toggle clock (negation operator ~)
-                                            // Creates clock with period of 4 time units
-  
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      #5 a=1;b=1;                           // Wait 5 time units, set a=1, b=1
-      #5 a=1;b=0;                           // Wait 5 more time units, set a=1, b=0
-      
-      c1:@(posedge clk) assert(a&&b)       // c1: assertion label
-                                            // @(posedge clk): event control (wait for clock rising edge)
-                                            // assert: immediate assertion keyword
-                                            // (a&&b): condition to check (logical AND)
-        begin                               // Begin pass block
-        $display("pass1");                 // Print message if assertion passes
-        end                                 // End pass block
-      else                                  // else: optional failure block
-        begin                               // Begin fail block
-          $display("fail1");               // Print message if assertion fails
-        end                                 // End fail block
-  
-      c2:@(posedge clk) assert(a||b)        // c2: assertion label
-                                            // @(posedge clk): wait for clock rising edge
-                                            // assert: immediate assertion keyword
-                                            // (a||b): condition to check (logical OR)
-        begin                               // Begin pass block
-        $display("pass2");                 // Print message if assertion passes
-        end                                 // End pass block
-      else                                  // else: optional failure block
-        begin                               // Begin fail block
-          $display("fail2");               // Print message if assertion fails
-        end                                 // End fail block
-      
-      c3:@(posedge clk) assert(a^b)        // c3: assertion label
-                                            // @(posedge clk): wait for clock rising edge
-                                            // assert: immediate assertion keyword
-                                            // (a^b): condition to check (logical XOR)
-        begin                               // Begin pass block
-        $display("pass3");                 // Print message if assertion passes
-        end                                 // End pass block
-      else                                  // else: optional failure block
-        begin                               // Begin fail block
-          $display("fail3");               // Print message if assertion fails
-        end                                 // End fail block
-  
-      #20 $finish;                          // Wait 20 time units, finish simulation
-    end                                     // End sequential block
-endmodule                                  // End module
-```
-
-**Explanation:**
-- `assert(condition)`: Immediate assertion (checks condition immediately)
-- `@(posedge clk)`: Event control (waits for clock rising edge)
-- `begin...end`: Pass block (executes if condition true)
-- `else begin...end`: Fail block (executes if condition false)
-- `a&&b`: Logical AND (both must be true)
-- `a||b`: Logical OR (either can be true)
-- `a^b`: Logical XOR (exclusive OR)
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Protocol Compliance Check**
-   ```systemverilog
-   always_comb begin
-     assert (packet_valid && packet_ready)
-       $display("Packet handshake OK");
-     else
-       $error("Packet handshake failed");
-   end
-   ```
-   - Protocol verification uses immediate assertions for combinational checks
-   - Used in all protocol verification
+- Event control: `@(posedge clk)`
+- Immediate evaluation
 
 **When to Use:**
-- ✅ **Combinational Logic**: Combinational checks
-- ✅ **Immediate Checks**: Immediate condition checks
-- ✅ **Protocol Compliance**: Protocol compliance checks
-- ✅ **Error Detection**: Runtime error detection
+- Combinational checks
+- Immediate verification
+- Non-clock-based checks
+
+**Example Usage:**
+```systemverilog
+@(posedge clk) assert (a && b)
+  $display("Pass");
+else
+  $display("Fail");
+```
 
 ---
 
-## 6. Coverage
+### 6.2 Sequence Assertions
+**File**: `assertions/sequence_assertion.sv`
 
-### 6.1 Coverage Groups
-**📁 File Reference**: `coverages/coverage.sv`
+**What are Sequence Assertions?**
+Check temporal properties over multiple clock cycles using sequences and properties.
 
-#### Detailed Theory
-
-**Coverage Theory:**
-```
-Coverage = Test Quality Metric
-
-Coverage Types:
-├── Code Coverage: Lines executed
-├── Functional Coverage: Features tested
-├── Assertion Coverage: Assertions triggered
-└── Cross Coverage: Combinations tested
-
-Coverage Goal: 100% functional coverage
-```
-
-#### Code Example from `coverages/coverage.sv`
-
-```systemverilog
-class packet;                               // class: define a class for randomization
-  rand bit [5:0]data;                       // rand: keyword makes variable randomizable
-                                            // bit [5:0]: 6-bit unsigned type (range 0 to 63)
-                                            // data: variable name
-endclass                                    // End class
-
-module sv;                                  // Declare module
-  packet p=new();                           // Declare handle and create packet object
-  covergroup cg;                            // covergroup: define a coverage group
-                                            // cg: coverage group name
-    option.per_instance=1;                  // option: coverage group option
-                                            // per_instance=1: track coverage per instance separately
-    c1:coverpoint p.data{                   // coverpoint: define a coverage point
-                                            // c1: coverpoint name
-                                            // p.data: variable being covered
-      bins b[4]={1,2,3,4};                 // bins: define coverage bins
-                                            // b[4]: array of 4 bins
-                                            // {1,2,3,4}: values assigned to bins
-      bins c[]={9,6,7};                    // bins: define individual bins for each value
-                                            // c[]: array of bins (auto-sized)
-                                            // {9,6,7}: creates bins c[0]=9, c[1]=6, c[2]=7
-      bins d[]=(1=>2);                     // bins: define transition bins
-                                            // d[]: array of bins for transitions
-                                            // (1=>2): transition from value 1 to value 2
-      bins y0={8};                          // bins: define single bin
-                                            // y0: bin name, {8}: bin contains value 8
-      bins y1={5};                          // bins: define single bin
-                                            // y1: bin name, {5}: bin contains value 5
-      bins p[]=default;                     // bins: define default bins
-                                            // p[]: array of bins for default values
-                                            // default: catches all values not explicitly binned
-      wildcard bins a[5]={4'b1???};        // wildcard bins: define bins with wildcards
-                                            // a[5]: array of 5 bins
-                                            // {4'b1???}: wildcard pattern (4-bit binary)
-                                            // 1??? matches: 1000, 1001, 1010, etc.
-      bins q[]={[20:$]};                   // bins: define range bins
-                                            // q[]: array of bins for range
-                                            // {[20:$]}: range from 20 to maximum ($)
-      ignore_bins w[3]={32,33,34};         // ignore_bins: bins to ignore in coverage
-                                            // w[3]: array of 3 ignore bins
-                                            // {32,33,34}: values to ignore
-      illegal_bins e[2]={21,22};           // illegal_bins: bins that indicate errors
-                                            // e[2]: array of 2 illegal bins
-                                            // {21,22}: values that should never occur
-    }                                       // End of coverpoint definition
-    endgroup                                // End of coverage group definition
-    
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      cg cg_inst;                           // Declare coverage group instance
-      cg_inst=new();                        // Create coverage group instance
-      repeat(20)                            // repeat: loop construct (20 times)
-        begin                               // Begin loop body
-          p.randomize();                    // randomize(): method generates random values
-          cg_inst.sample();                 // sample(): method samples coverage data
-                                            // Updates coverage bins based on current p.data value
-          $display("data=%0d",p.data);     // Print randomized data value
-        end                                 // End loop body
-    end                                     // End sequential block
-endmodule                                  // End module
-```
-
-**Explanation:**
-- `covergroup cg`: Defines coverage group
-- `coverpoint p.data`: Coverage point for variable `p.data`
-- `bins b[4]={1,2,3,4}`: Fixed bins (4 bins with specific values)
-- `bins c[]={9,6,7}`: Auto-sized bins (one bin per value)
-- `bins d[]=(1=>2)`: Transition bins (1 followed by 2)
-- `bins p[]=default`: Default bins (catch-all)
-- `wildcard bins`: Wildcard pattern matching
-- `ignore_bins`: Values to ignore in coverage
-- `illegal_bins`: Values that indicate errors
-- `sample()`: Samples current values for coverage
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Protocol Coverage**
-   ```systemverilog
-   covergroup protocol_cg;
-     c1: coverpoint packet_type {
-       bins eth = {ETH_TYPE};
-       bins ip = {IP_TYPE};
-       bins tcp = {TCP_TYPE};
-     }
-     c2: coverpoint packet_length {
-       bins small = {[64:128]};
-       bins medium = {[128:512]};
-       bins large = {[512:1500]};
-     }
-     cross c1, c2;  // Cross coverage
-   endgroup
-   ```
-   - Protocol verification tracks coverage of packet types and lengths
-   - Used in all protocol verification
+**Key Features:**
+- `sequence`: Temporal patterns
+- `property`: Property definitions
+- `assert property`: Concurrent assertions
+- Clock-based evaluation
 
 **When to Use:**
-- ✅ **Coverage Tracking**: Tracking test coverage
-- ✅ **Coverage Closure**: Achieving coverage goals
-- ✅ **Test Planning**: Planning test cases
-- ✅ **Quality Assurance**: Quality assurance
+- Temporal checks
+- Multi-cycle properties
+- Design verification
+- Formal verification
+
+**Example Usage:**
+```systemverilog
+sequence seq1;
+  @(posedge clk) (a && b);
+endsequence
+
+property prop1;
+  seq1;
+endproperty
+
+assert property (prop1);
+```
 
 ---
 
-## 7. Concurrency and Threading
+## 7. Coverage
 
-### 7.1 Fork-Join
-**📁 File Reference**: `fork_joins_or_threads/join_or_join_all.sv`
+### 7.1 Basic Coverage
+**File**: `coverages/coverage.sv`
 
-#### Detailed Theory
+**What is Coverage?**
+Tracks simulation coverage of design features to ensure thorough testing.
 
-**Thread Theory:**
-```
-Fork = Spawn Threads
-Join = Wait for Threads
+**Key Concepts:**
+- `covergroup`: Coverage group definition
+- `coverpoint`: Variable being covered
+- `bins`: Coverage bins
+- `sample()`: Sample coverage data
 
-Types:
-├── join: Wait for all
-├── join_any: Wait for any
-└── join_none: Wait for none
-```
+**Bin Types:**
+- **Fixed bins**: `bins name = {value}`
+- **Array bins**: `bins name[] = {value1, value2, ...}`
+- **Range bins**: `bins name[] = {[min:max]}`
+- **Wildcard bins**: `wildcard bins name = {pattern}`
+- **Transition bins**: `bins name[] = (value1 => value2)`
+- **Default bins**: `bins name[] = default`
+- **Ignore bins**: `ignore_bins name = {values}`
+- **Illegal bins**: `illegal_bins name = {values}`
 
-#### Code Example from `fork_joins_or_threads/join_or_join_all.sv`
-
+**Example Usage:**
 ```systemverilog
-module sv;                                  // Declare module
-  initial                                   // Initial block
-    begin                                   // Begin sequential block
-      fork                                  // fork: start parallel threads
-                                            // All statements inside execute concurrently
-        begin                               // Begin first thread
-          #10 $display($time,"im one");   // Wait 10 time units, display message
-                                            // Executes after 10 time units
-        end                                 // End first thread
-        begin                               // Begin second thread
-          #20 $display($time,"im two");   // Wait 20 time units, display message
-                                            // Executes after 20 time units
-        end                                 // End second thread
-      join                                  // join: wait for all threads to complete
-                                            // Parent thread waits here until both threads finish
-                                            // Continues only after both #10 and #20 threads complete
-      begin                                 // Begin sequential block (after join)
-        #10 $display($time,"im outside"); // Wait 10 more time units, display message
-                                            // Executes after join completes (at time 20+10=30)
-      end                                   // End sequential block
-    end                                     // End sequential block
-endmodule                                  // End module
+covergroup cg;
+  c1: coverpoint data {
+    bins b[4] = {1,2,3,4};
+    bins c[] = {[10:20]};
+  }
+endgroup
 ```
-
-**Explanation:**
-- `fork`: Starts parallel threads (concurrent execution)
-- `begin...end`: Each thread block
-- `join`: Waits for all threads to complete
-- Threads execute concurrently, parent waits at join
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Parallel Test Execution**
-   ```systemverilog
-   fork
-     begin
-       generate_stimulus();
-     end
-     begin
-       monitor_responses();
-     end
-     begin
-       check_scoreboard();
-     end
-   join  // Wait for all threads
-   ```
-   - All testbenches use fork-join for parallel execution
-   - Used in 100% of verification environments
-
-**When to Use:**
-- ✅ **Parallel Execution**: Parallel task execution
-- ✅ **Synchronization**: Thread synchronization
-- ✅ **Protocol Simulation**: Parallel protocol simulation
-- ✅ **Test Execution**: Parallel test execution
 
 ---
 
-## 8. Synchronization Primitives
+### 7.2 Cross Coverage
+**File**: `coverages/cross_coverage.sv`
 
-### 8.1 Mailboxes
-**📁 File Reference**: `mailbox/bounded.sv`
+**What is Cross Coverage?**
+Coverage between multiple variables to check combinations.
 
-#### Detailed Theory
-
-**Mailbox Theory:**
-```
-Mailbox = Thread-Safe Queue
-
-Operations:
-├── put(): Send message (blocking if full)
-├── get(): Receive message (blocking if empty)
-├── try_put(): Non-blocking send
-└── try_get(): Non-blocking receive
-```
-
-#### Code Example from `mailbox/bounded.sv`
-
-```systemverilog
-module sv;                                  // Declare module
-  int addr;                                 // Declare integer variable
-  mailbox mbx=new();                        // mailbox: declare a mailbox
-                                            // mbx: mailbox name
-                                            // new(): constructor creates mailbox
-  initial                                   // Initial block (producer)
-    begin                                   // Begin sequential block
-      addr=10;                              // Assign value 10 to variable addr
-      mbx.put(addr);                        // put(): method sends message to mailbox
-                                            // mbx.put(addr): puts value 10 into mailbox
-                                            // put() is blocking: waits if mailbox is full
-      $display("i am putting 1 key");      // Print message
-    end                                     // End sequential block
-  initial                                   // Another initial block (consumer)
-    begin                                   // Begin sequential block
-      mbx.get(addr);                        // get(): method receives message from mailbox
-                                            // mbx.get(addr): gets value from mailbox
-                                            // get() is blocking: waits if mailbox is empty
-                                            // Receives value 10 that was put by first initial block
-      $display("i am getting 9 keys");    // Print message
-    end                                     // End sequential block
-endmodule                                  // End module
-```
-
-**Explanation:**
-- `mailbox mbx=new()`: Creates mailbox (unbounded by default)
-- `mbx.put(addr)`: Sends message (blocking if full)
-- `mbx.get(addr)`: Receives message (blocking if empty)
-- Thread-safe communication between processes
-
-#### Where It's Used
-
-**Industry Applications:**
-1. **Scoreboard Implementation**
-   ```systemverilog
-   class Scoreboard;
-     mailbox expected_mbx;
-     mailbox actual_mbx;
-     
-     task add_expected(Transaction tx);
-       expected_mbx.put(tx);
-     endtask
-     
-     task check_actual(Transaction tx);
-       Transaction exp_tx;
-       actual_mbx.get(exp_tx);
-       compare(exp_tx, tx);
-     endtask
-   endclass
-   ```
-   - All testbenches use scoreboards implemented with mailboxes
-   - Used in 100% of verification environments
+**Key Features:**
+- `cross`: Cross coverage between coverpoints
+- Combination coverage
+- Multi-dimensional coverage
 
 **When to Use:**
-- ✅ **Thread Communication**: Communication between threads
-- ✅ **Producer-Consumer**: Producer-consumer patterns
-- ✅ **Scoreboards**: Scoreboard implementation
-- ✅ **Transaction Queuing**: Transaction queuing
+- Combination testing
+- Multi-variable coverage
+- Interaction coverage
 
 ---
 
-## Repository Structure
+### 7.3 Coverage with Clause
+**File**: `coverages/with_clause.sv`
+
+**What is With Clause?**
+Conditional coverage bins using `with` clause.
+
+**Key Features:**
+- `with (condition)`: Filter coverage
+- Conditional binning
+- Selective coverage
+
+---
+
+## 8. Concurrency and Threading
+
+### 8.1 Fork-Join
+**File**: `fork_joins_or_threads/join_or_join_all.sv`
+
+**What is Fork-Join?**
+All threads execute concurrently; parent waits for all to complete.
+
+**Key Features:**
+- `fork ... join`: Wait for all threads
+- Concurrent execution
+- Synchronization point
+
+**When to Use:**
+- Parallel execution
+- Synchronization needed
+- All threads must complete
+
+**Example Usage:**
+```systemverilog
+fork
+  begin
+    #10 $display("Thread 1");
+  end
+  begin
+    #20 $display("Thread 2");
+  end
+join  // Wait for both
+```
+
+---
+
+### 8.2 Fork-Join Any
+**File**: `fork_joins_or_threads/join_any.sv`
+
+**What is Join Any?**
+Parent continues after first thread completes.
+
+**Key Features:**
+- `fork ... join_any`: Wait for any thread
+- Early continuation
+- Background execution
+
+**When to Use:**
+- Race conditions
+- First-to-complete logic
+- Background threads
+
+---
+
+### 8.3 Fork-Join None
+**File**: `fork_joins_or_threads/join_none.sv`
+
+**What is Join None?**
+Parent continues immediately; threads run in background.
+
+**Key Features:**
+- `fork ... join_none`: No waiting
+- Fire-and-forget threads
+- Background processing
+
+**When to Use:**
+- Background tasks
+- Fire-and-forget
+- Independent threads
+
+---
+
+### 8.4 Wait Fork
+**File**: `fork_joins_or_threads/wait_fork.sv`
+
+**What is Wait Fork?**
+Waits for all child threads to complete.
+
+**Key Features:**
+- `wait fork`: System task
+- Thread synchronization
+- Complete all spawned threads
+
+**When to Use:**
+- Final synchronization
+- Wait for all threads
+- Cleanup before exit
+
+---
+
+### 8.5 Disable Fork
+**File**: `fork_joins_or_threads/disable_fork.sv`
+
+**What is Disable Fork?**
+Terminates all child threads spawned by fork-join.
+
+**Key Features:**
+- `disable fork`: System task
+- Thread termination
+- Cleanup mechanism
+
+**When to Use:**
+- Error handling
+- Thread cleanup
+- Termination needed
+
+---
+
+## 9. Synchronization Primitives
+
+### 9.1 Mailboxes
+**Files**: `mailbox/bounded.sv`, `mailbox/un_bounded.sv`
+
+**What are Mailboxes?**
+Thread-safe communication channels between processes.
+
+**Bounded Mailboxes:**
+- Fixed capacity
+- `put()` blocks when full
+- Memory efficient
+
+**Unbounded Mailboxes:**
+- Unlimited capacity
+- Never blocks on put
+- Flexible size
+
+**Methods:**
+- `put(message)`: Send message (blocking)
+- `get(message)`: Receive message (blocking)
+- `try_put()`, `try_get()`: Non-blocking versions
+- `num()`: Number of messages
+
+**When to Use:**
+- Inter-process communication
+- Producer-consumer patterns
+- Thread synchronization
+- Message passing
+
+**Example Usage:**
+```systemverilog
+mailbox mbx = new();
+mbx.put(data);  // Send
+mbx.get(data);  // Receive
+```
+
+---
+
+### 9.2 Semaphores
+**Files**: `semaphore/sema.sv`, `semaphore/sema_by_using_fork_join.sv`
+
+**What are Semaphores?**
+Resource counting and mutual exclusion for access control.
+
+**Key Features:**
+- `new(count)`: Create with initial keys
+- `put(count)`: Return keys (non-blocking)
+- `get(count)`: Acquire keys (blocking)
+- Resource access control
+
+**When to Use:**
+- Resource sharing
+- Access control
+- Mutual exclusion
+- Thread synchronization
+
+**Example Usage:**
+```systemverilog
+semaphore sema = new(4);  // 4 keys
+sema.get(1);  // Acquire 1 key
+// Critical section
+sema.put(1);  // Return key
+```
+
+---
+
+## 10. Advanced Control Flow
+
+### 10.1 Priority If
+**File**: `if_conditions/priority_if.sv`
+
+**What is Priority If?**
+Ensures at least one branch executes; error if all conditions false.
+
+**Key Features:**
+- `priority if`: Enforced execution
+- Simulation error on all false
+- Guaranteed branch execution
+
+**When to Use:**
+- Must have one branch
+- Error detection
+- Required execution
+
+---
+
+### 10.2 Unique If
+**File**: `if_conditions/unique_if.sv`
+
+**What is Unique If?**
+Ensures exactly one branch executes; error if multiple conditions true.
+
+**Key Features:**
+- `unique if`: Mutually exclusive branches
+- Simulation error on multiple true
+- Exclusive execution guarantee
+
+**When to Use:**
+- Mutually exclusive conditions
+- One-hot logic
+- Error detection
+
+---
+
+## 11. Interview Questions
+
+The repository includes practical interview questions covering various SystemVerilog concepts:
+
+### Pattern Generation
+**Location**: `interview_questions/pattern_generation/`
+- Various pattern generation examples
+- Practical coding problems
+
+### System Functions
+**Locations**: 
+- `interview_questions/$countones/`: Count ones in a vector
+- `interview_questions/$onehot/`: Check one-hot encoding
+
+### Constraint-Based Problems
+**Locations**:
+- `interview_questions/implication_constraint/`: Implication operator usage
+- `interview_questions/inside_constraint/`: Inside constraint applications
+
+### Complex Problems
+**Location**: `interview_questions/chess_board/`: Chess board-related problems
+
+---
+
+## 12. Repository Structure
 
 ```
 System Verilog/
@@ -1774,6 +1474,12 @@ System Verilog/
 │   ├── priority_if.sv
 │   └── unique_if.sv
 ├── interview_questions/              # Interview problems
+│   ├── $countones/
+│   ├── $onehot/
+│   ├── chess_board/
+│   ├── implication_constraint/
+│   ├── inside_constraint/
+│   └── pattern_generation/
 ├── mailbox/                          # Mailbox examples
 │   ├── bounded.sv
 │   └── un_bounded.sv
@@ -1811,39 +1517,163 @@ System Verilog/
 
 ---
 
-## Getting Started
+## 13. Getting Started
 
 ### Prerequisites
-- SystemVerilog Simulator (ModelSim, QuestaSim, VCS, Xcelium)
-- Basic Verilog/SystemVerilog knowledge
-- Text editor or IDE
+
+- **SystemVerilog Simulator**: ModelSim, QuestaSim, VCS, Xcelium, or any IEEE 1800 compliant simulator
+- **Basic Knowledge**: Understanding of Verilog/SystemVerilog syntax
+- **Text Editor**: Any text editor or IDE (VS Code, Vim, etc.)
+
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/systemverilog.git
+   cd systemverilog
+   ```
+
+2. **Compile a file** (Example with ModelSim/QuestaSim):
+   ```bash
+   vlog program_block.sv
+   ```
+
+3. **Run simulation**:
+   ```bash
+   vsim -c program_block -do "run -all; quit"
+   ```
+
+4. **View waveforms** (if VCD file generated):
+   ```bash
+   vsim program_block
+   # Add signals to waveform viewer
+   ```
 
 ### Learning Path
-1. **Fundamentals**: Start with `program_block.sv`, `packages.sv`
-2. **Data Types**: Study `arrays/one_dimentional_array.sv`, `datatypes/enum_datatype.sv`
-3. **OOP**: Learn from `oops_concepts/oops_concept.sv`, `oops_concepts/inheritance.sv`
-4. **Verification**: Practice with `constraints/inside_constraint.sv`, `coverages/coverage.sv`
-5. **Advanced**: Explore `fork_joins_or_threads/join_or_join_all.sv`, `mailbox/bounded.sv`
+
+#### Beginner Level
+1. Start with fundamental concepts:
+   - `program_block.sv` - Program blocks
+   - `packages.sv` - Packages
+   - `for_loop.sv` - Loops
+   - `arrays/one_dimentional_array.sv` - Basic arrays
+
+2. Move to data types:
+   - `datatypes/enum_datatype.sv` - Enumerated types
+   - `datatypes/struct_datatype.sv` - Structures
+   - `string/string.sv` - Strings
+
+#### Intermediate Level
+1. Object-Oriented Programming:
+   - `oops_concepts/oops_concept.sv` - Classes
+   - `oops_concepts/inheritance.sv` - Inheritance
+   - `oops_concepts/polymorphism.sv` - Polymorphism
+
+2. Arrays and Data Structures:
+   - `arrays/dynamic_array.sv` - Dynamic arrays
+   - `arrays/associative_array/` - Associative arrays
+   - `queue/unbounded_queue.sv` - Queues
+
+3. Constraints:
+   - `constraints/inside_constraint.sv` - Basic constraints
+   - `constraints/if_else_constraint.sv` - Conditional constraints
+   - `randomization/repeat.sv` - Randomization
+
+#### Advanced Level
+1. Assertions and Coverage:
+   - `assertions/sequence_assertion.sv` - Sequence assertions
+   - `coverages/coverage.sv` - Coverage groups
+
+2. Concurrency:
+   - `fork_joins_or_threads/join_or_join_all.sv` - Fork-join
+   - `mailbox/bounded.sv` - Mailboxes
+   - `semaphore/sema.sv` - Semaphores
+
+3. Interview Questions:
+   - Practice with problems in `interview_questions/`
 
 ---
 
-## Industry Applications Summary
+## 14. Best Practices
 
-| Concept | File Reference | Industry Usage | Real-Time Application |
-|---------|---------------|----------------|----------------------|
-| **Program Blocks** | `program_block.sv` | 100% ASIC projects | All testbenches |
-| **Packages** | `packages.sv` | 100% UVM projects | UVM framework |
-| **Classes** | `oops_concepts/oops_concept.sv` | 100% verification | Transaction modeling |
-| **Constraints** | `constraints/inside_constraint.sv` | 100% test generation | Coverage-driven verification |
-| **Assertions** | `assertions/immidiate_assertion.sv` | 100% formal verification | Protocol verification |
-| **Coverage** | `coverages/coverage.sv` | 100% verification | Coverage-driven methodology |
-| **Mailboxes** | `mailbox/bounded.sv` | 100% scoreboards | Scoreboard implementation |
-| **Fork-Join** | `fork_joins_or_threads/join_or_join_all.sv` | 100% testbenches | Parallel execution |
+### Code Organization
+- ✅ Use packages for shared code
+- ✅ Separate classes into logical files
+- ✅ Use meaningful names
+- ✅ Group related functionality
+
+### Documentation
+- ✅ Comment complex logic
+- ✅ Explain constraints clearly
+- ✅ Document function parameters
+- ✅ Note important assumptions
+
+### Constraints
+- ✅ Use meaningful constraint names
+- ✅ Keep constraints simple when possible
+- ✅ Use soft constraints for preferences
+- ✅ Test constraint conflicts
+
+### OOP Design
+- ✅ Use virtual functions for polymorphism
+- ✅ Encapsulate data properly
+- ✅ Use inheritance appropriately
+- ✅ Follow SOLID principles
+
+### Performance
+- ✅ Use appropriate data structures
+- ✅ Avoid unnecessary randomization
+- ✅ Optimize coverage bins
+- ✅ Consider memory usage
+
+---
+
+## Additional Resources
+
+- **IEEE SystemVerilog Standard**: IEEE 1800
+- **Verification Academy**: https://verificationacademy.com/
+- **SystemVerilog LRM**: Language Reference Manual
+- **Community Forums**: Stack Overflow, Verification Guild
+
+---
+
+## Contributing
+
+Contributions are welcome! Please ensure:
+- All code includes detailed comments
+- Examples are clear and well-documented
+- Code follows SystemVerilog best practices
+- Files are properly organized
+- Test cases are included where applicable
+
+---
+
+## License
+
+This repository is for educational purposes. Feel free to use and modify the code for learning.
+
+---
+
+## Author
+
+**Rajesh Matta**
+
+A comprehensive SystemVerilog learning resource with detailed explanations and examples.
+
+---
+
+## Acknowledgments
+
+This repository serves as a learning resource for SystemVerilog concepts commonly used in verification and design. All examples are carefully documented with line-by-line explanations to facilitate understanding.
 
 ---
 
 **Happy Learning! 🚀**
 
+For questions, suggestions, or contributions, please open an issue or submit a pull request.
+
+---
+
 *Last Updated: [Current Date]*
 
-*Repository Version: 4.0 - File References with Detailed Theory and Use Cases*
+*Repository Version: 1.0*
